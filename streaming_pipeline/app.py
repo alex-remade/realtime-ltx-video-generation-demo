@@ -2,8 +2,8 @@ import fal
 from fal.container import ContainerImage
 from fastapi import WebSocket
 
-from streaming_service import StreamingService
-from models import StartStreamRequest
+from streaming_pipeline.streaming_service import StreamingService
+from streaming_pipeline.models import StartStreamRequest
 from dotenv import load_dotenv
 
 load_dotenv()

@@ -5,10 +5,10 @@ from io import BytesIO
 from PIL import Image
 import requests
 
-from logger_config import generation_log
+from streaming_pipeline.utils.logger_config import generation_log
 
 
-from models import LTXVideoRequestI2V, StreamingState, Monitorable, UserCommentParams
+from streaming_pipeline.models import LTXVideoRequestI2V, StreamingState, Monitorable, UserCommentParams
 
 
 

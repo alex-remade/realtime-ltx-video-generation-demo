@@ -2,7 +2,7 @@ import time
 import threading
 from collections import deque
 from typing import Dict, Optional, Any
-from models import Monitorable
+from streaming_pipeline.models import Monitorable
 
 class ComponentMonitor:
     """

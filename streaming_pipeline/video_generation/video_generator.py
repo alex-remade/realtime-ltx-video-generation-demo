@@ -5,7 +5,7 @@ from io import BytesIO
 import base64
 
 
-from models import LTXVideoRequestI2V, LTXVideoResponseWithFrames, Monitorable
+from streaming_pipeline.models import LTXVideoRequestI2V, LTXVideoResponseWithFrames, Monitorable
 from typing import Dict, Any
 
 def safe_snapshot_download(

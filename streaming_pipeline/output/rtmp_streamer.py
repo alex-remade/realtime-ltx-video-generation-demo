@@ -5,8 +5,8 @@ import numpy as np
 from queue import Queue, Empty
 from PIL import Image, ImageDraw, ImageFont
 import cv2
-from logger_config import queue_log
-from models import Monitorable
+from streaming_pipeline.utils.logger_config import queue_log
+from streaming_pipeline.models import Monitorable
 
 class FFmpegRTMPStreamer(Monitorable):
     def __init__(self, stream_key: str, fps: int = 24, width: int = 640, height: int = 480):

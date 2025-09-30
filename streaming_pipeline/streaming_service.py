@@ -1,13 +1,13 @@
 import os
 import time
 # Removed unused typing imports
-from realtime_generator import RealtimeGenerator
-from utils.component_monitor import ComponentMonitor
-from ffmpeg_rtmp_streamer import FFmpegRTMPStreamer
-from realtime_video_streamer import RealtimeVideoStreamer
-from twitch.twitch_listener import TwitchChatListener
-from prompt_generator import PromptGenerator
-from text_overlay import TextOverlay
+from streaming_pipeline.video_generation.video_generator import RealtimeGenerator
+from streaming_pipeline.utils.monitoring import ComponentMonitor
+from streaming_pipeline.output.rtmp_streamer import FFmpegRTMPStreamer
+from streaming_pipeline.core.streaming_engine import RealtimeVideoStreamer
+from streaming_pipeline.input.twitch_listener import TwitchChatListener
+from streaming_pipeline.prompt_generation.prompt_generator import PromptGenerator
+from streaming_pipeline.postprocessing.text_overlay import TextOverlay
 from dotenv import load_dotenv
 
 load_dotenv()

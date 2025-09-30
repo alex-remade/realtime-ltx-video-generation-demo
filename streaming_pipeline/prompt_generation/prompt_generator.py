@@ -5,8 +5,8 @@ import base64
 from dataclasses import dataclass
 from typing import List, Optional, Dict, Any
 from pathlib import Path
-from twitch.twitch_listener import TwitchComment
-from models import StreamingState, Monitorable  # Direct import, no TYPE_CHECKING needed
+from streaming_pipeline.models import TwitchComment
+from streaming_pipeline.models import StreamingState, Monitorable
 
 @dataclass
 class PromptResult:
@@ -15,8 +15,12 @@ class PromptResult:
     reasoning: str
 
 VISUAL_MODE = True
-prompt_filename = "prompts/system_prompt_visual.txt" if VISUAL_MODE else "prompts/system_prompt.txt"
-system_prompt = Path(prompt_filename).read_text()
+
+# Get the directory of this file and construct path to prompts
+current_dir = Path(__file__).parent.parent  # Go up to streaming_pipeline/
+prompts_dir = current_dir / "prompts"
+prompt_filename = "system_prompt_visual.txt" if VISUAL_MODE else "system_prompt.txt"
+system_prompt = (prompts_dir / prompt_filename).read_text()
 
 
 class PromptGenerator(Monitorable):

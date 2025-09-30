@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from typing import Optional, Dict, Any, List
 import time
-from models import Monitorable
+from streaming_pipeline.models import Monitorable
 
 
 class TextOverlay(Monitorable):

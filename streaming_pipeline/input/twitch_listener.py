@@ -7,7 +7,7 @@ import sys
 import os
 from dataclasses import dataclass
 from typing import Optional
-from models import Monitorable
+from streaming_pipeline.models import Monitorable
 
 @dataclass
 class TwitchComment:
