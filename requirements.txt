@@ -1,0 +1,28 @@
+# Core dependencies
+torch>=2.1.0
+diffusers>=0.28.2
+transformers>=4.47.2,<4.52.0
+sentencepiece>=0.1.96
+huggingface-hub~=0.30
+einops
+timm
+
+# Optional: inference extras
+imageio[ffmpeg]
+av
+torchvision
+
+# Optional: testing
+pytest
+
+# FFmpeg and streaming
+ffmpeg-python
+opencv-python>=4.9.0.80
+python-dotenv>=1.0.0
+
+# OpenAI for prompt generation
+openai>=1.0.0
+
+# Web framework
+fastapi>=0.100.0
+uvicorn>=0.23.0

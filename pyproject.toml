@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streaming-pipeline"
+version = "0.1.0"
+description = "Real-time video generation and streaming pipeline"
+dependencies = [
+    # Core ML dependencies
+    "torch>=2.1.0",
+    "diffusers>=0.28.2", 
+    "transformers>=4.47.2,<4.52.0",
+    "accelerate>=1.4.0",
+    
+    # Video processing
+    "imageio[ffmpeg]>=2.25.0",
+    "opencv-python>=4.9.0.80",
+    "av",
+    "ffmpeg-python",
+    
+    # API and integrations
+    "fastapi>=0.100.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=1.8,<2.0",
+    
+    # fal
+    "fal",
+]
+
+[tool.setuptools]
+packages = ["streaming_pipeline"]
+
+
+[tool.fal.apps]
+realtime-streaming = { 
+    auth = "private", 
+    ref = "streaming_pipeline/app.py::RealtimeStreamingApp" 
+}

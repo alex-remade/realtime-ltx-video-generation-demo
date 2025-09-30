@@ -1,0 +1,231 @@
+import json
+import openai
+import requests
+import base64
+from dataclasses import dataclass
+from typing import List, Optional, Dict, Any
+from pathlib import Path
+from twitch.twitch_listener import TwitchComment
+from models import StreamingState, Monitorable  # Direct import, no TYPE_CHECKING needed
+
+@dataclass
+class PromptResult:
+    selected_comment: Optional[TwitchComment]  # None for evolution
+    prompt: str
+    reasoning: str
+
+VISUAL_MODE = True
+prompt_filename = "prompts/system_prompt_visual.txt" if VISUAL_MODE else "prompts/system_prompt.txt"
+system_prompt = Path(prompt_filename).read_text()
+
+
+class PromptGenerator(Monitorable):
+    # Class variables - configure these like DEV_MODE
+    
+    CONTEXT_WINDOW_SIZE = 10  # Number of previous prompts to include in context
+    USE_GROQ = True  # Use Groq for both text and vision
+    
+    def __init__(self, openai_api_key: str, groq_api_key: str = None):
+        # OpenAI client (always initialize as fallback)
+        self.openai_client = openai.OpenAI(api_key=openai_api_key)
+        self.system_prompt = system_prompt
+        self.VISUAL_MODE = VISUAL_MODE
+        # Groq client (optional)
+        if groq_api_key and self.USE_GROQ:
+            self.groq_client = openai.OpenAI(
+                api_key=groq_api_key,
+                base_url="https://api.groq.com/openai/v1"
+            )
+            print("🚀 Groq client initialized for fast inference")
+        else:
+            self.groq_client = None
+            if self.USE_GROQ:
+                print("⚠️ USE_GROQ=True but no GROQ_API_KEY provided, falling back to OpenAI")
+            
+        # Choose system prompt based on visual mode
+
+   
+        # Performance tracking for useful monitoring
+        self.total_prompts = 0
+        self.total_response_time = 0.0
+        self.last_input_length = 0
+        self.last_output_length = 0 
+        self.last_generation_time = 0.0
+    
+    def _select_model_and_client(self, context):
+        """Select optimal model and client based on requirements"""
+        
+        if self.USE_GROQ and self.groq_client:
+            if self.VISUAL_MODE and context.current_frame_base64:
+                # Use Groq's Llama 4 Scout for vision - fast and capable!
+                print("🖼️ Using Groq Llama 4 Scout for FAST vision inference")
+                return "meta-llama/llama-4-scout-17b-16e-instruct", self.groq_client
+            else:
+                # Use FASTEST text model for non-vision
+                print("⚡ Using Groq llama-3.1-8b-instant for MAXIMUM SPEED")
+                return "llama-3.1-8b-instant", self.groq_client
+        
+        # Fallback to OpenAI only if Groq not available
+        elif self.VISUAL_MODE and context.current_frame_base64:
+            print("🔄 Falling back to OpenAI GPT-4o for vision")
+            return "gpt-4o", self.openai_client
+        else:
+            print("🔄 Falling back to OpenAI GPT-4o-mini")
+            return "gpt-4o-mini", self.openai_client
+
+    def generate_prompt(self, comments: List[TwitchComment], context: StreamingState) -> PromptResult:
+        """Generate prompt with Groq for both text and vision"""
+        
+        # Format comments for AI (or "None" if empty)
+        if comments:
+            comment_text = "\n".join([f"- {c.username}: {c.message}" for c in comments])
+        else:
+            comment_text = "None"
+        
+        # Create base system prompt
+        formatted_prompt = self.system_prompt.format(
+            previous_prompts=context.previous_prompts[-self.CONTEXT_WINDOW_SIZE:] if context.previous_prompts else ["None"],
+            current_scene=context.current_scene,
+            chat_comments=comment_text,
+            mode=context.mode
+        )
+        
+        # Select model and client
+        model, client = self._select_model_and_client(context)
+        
+        print(f"🤖 Using {model} ({'Groq' if client == self.groq_client else 'OpenAI'}) for prompt generation")
+        
+        # Prepare messages
+        messages = [{"role": "system", "content": formatted_prompt}]
+        
+        # Add visual context if enabled and available
+        if self.VISUAL_MODE and context.current_frame_base64:
+            try:
+                user_message = {
+                    "role": "user", 
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "First, describe what you can see in this current frame in detail. Then generate the next video prompt following the system instructions."
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{context.current_frame_base64}",
+                                "detail": "high"  # Groq might handle high detail better
+                            }
+                        }
+                    ]
+                }
+                messages.append(user_message)
+                print(f"🖼️ Using {'Groq' if client == self.groq_client else 'OpenAI'} vision model")
+            except Exception as e:
+                print(f"⚠️ Failed to add visual context: {e}")
+                # Fallback to text-only with same client
+                model = "llama-3.1-70b-versatile" if client == self.groq_client else "gpt-4o-mini"
+        
+        # Track input size and start timing
+        input_text = formatted_prompt + comment_text
+        self.last_input_length = len(input_text)
+        
+        import time
+        start_time = time.time()
+        
+        # Get AI response (same client selection)
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=400,
+                temperature=0.7,
+                response_format={"type": "json_object"}
+            )
+            
+            # Track timing
+            self.last_generation_time = time.time() - start_time
+            self.total_response_time += self.last_generation_time
+            self.total_prompts += 1
+            
+            # Parse response
+            try:
+                result = json.loads(response.choices[0].message.content)
+                
+                # Log the visual description ONLY if in visual mode
+                if self.VISUAL_MODE and result.get('visual_description'):
+                    print(f"👁️ AI VISUAL DESCRIPTION: {result['visual_description']}")
+                
+                # Track output size
+                self.last_output_length = len(result.get('prompt', '') + result.get('reasoning', ''))
+                
+                # Find the selected comment (if any)
+                selected_comment = None
+                if comments and result.get('selected_comment') != "null":
+                    selected_comment = self._find_comment(comments, result['selected_comment'])
+                
+                return PromptResult(
+                    selected_comment=selected_comment,
+                    prompt=result['prompt'],
+                    reasoning=result['reasoning']
+                )
+                
+            except (json.JSONDecodeError, KeyError, AttributeError) as e:
+                print(f"AI parsing failed: {e}")
+                # Simple fallback - EXACTLY like the original code
+                if comments:
+                    return PromptResult(
+                        selected_comment=comments[0] if comments else None,
+                        prompt=f"{context.current_scene}, {comments[0].message[:50] if comments[0] and comments[0].message else 'evolving'}, cinematic",
+                        reasoning="AI parsing failed, used first comment"
+                    )
+                else:
+                    return PromptResult(
+                        selected_comment=None,
+                        prompt=f"{context.current_scene}, slowly evolving, cinematic",
+                        reasoning="AI parsing failed, simple evolution"
+                    )
+                    
+        except Exception as e:
+            print(f"❌ OpenAI API error: {e}")
+            # Fallback to simple evolution
+            return PromptResult(
+                selected_comment=None,
+                prompt=f"{context.current_scene}, continuing naturally, cinematic",
+                reasoning=f"API error: {e}"
+            )
+    
+    def _find_comment(self, comments: List[TwitchComment], selected_text: str) -> TwitchComment:
+        """Find the comment that matches the AI selection"""
+        if not selected_text:
+            return comments[0] if comments else None
+        
+        selected_text_lower = selected_text.lower()
+        
+        for comment in comments:
+            if not comment or not comment.message:
+                continue
+                
+            comment_message_lower = comment.message.lower()
+            if comment_message_lower in selected_text_lower or selected_text_lower in comment_message_lower:
+                return comment
+        
+        return comments[0] if comments else None
+    
+    def reset_metrics(self):
+        """Reset performance metrics"""
+        self.total_prompts = 0
+        self.total_response_time = 0.0
+        self.last_input_length = 0
+        self.last_output_length = 0
+        self.last_generation_time = 0.0
+        print("🧹 Prompt generation metrics reset")
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get component status for monitoring - actual performance metrics!"""
+        avg_response_time = self.total_response_time / max(1, self.total_prompts)
+        return {
+            "prompts_generated": self.total_prompts,
+            "avg_response_time": round(avg_response_time, 3),
+            "last_input_length": self.last_input_length,
+            "last_output_length": self.last_output_length,
+            "last_generation_time": round(self.last_generation_time, 3)
+        }

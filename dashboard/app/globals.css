@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Focal Font Faces */
+@font-face {
+  font-family: 'Focal';
+  src: url('../fonts/focal/focal-light-web.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Focal';
+  src: url('../fonts/focal/focal-regular-web.woff2') format('woff2'),
+       url('../fonts/focal/focal-regular-web.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Focal';
+  src: url('../fonts/focal/focal-medium-web.woff2') format('woff2'),
+       url('../fonts/focal/focal-medium-web.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Focal';
+  src: url('../fonts/focal/focal-bold-web.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Focal';
+  src: url('../fonts/focal/focal-italic-web.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* FAL Brand Theme - Light Mode */
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --card: #ffffff;
+  --card-foreground: #111827;
+  --border: #e5e7eb;
+  --primary: #6d28d9;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #374151;
+  --accent: #6d28d9;
+  --accent-foreground: #ffffff;
+  --muted: #f9fafb;
+  --muted-foreground: #6b7280;
+}
+
+* {
+  border-color: #e5e7eb;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-feature-settings: "rlig" 1, "calt" 1;
+  font-weight: 300; /* Use Focal Light by default */
+}
+
+/* FAL Status Indicators */
+.status-indicator {
+  @apply inline-flex items-center px-3 py-1 rounded-md text-xs font-medium border;
+}
+
+.status-good {
+  @apply bg-fal-green-500/10 text-fal-green-700 border-fal-green-500/30;
+}
+
+.status-warning {
+  @apply bg-fal-yellow-500/10 text-fal-yellow-700 border-fal-yellow-500/30;
+}
+
+.status-danger {
+  @apply bg-fal-red-500/10 text-fal-red-700 border-fal-red-500/30;
+}
+
+.status-info {
+  @apply bg-fal-blue-500/10 text-fal-blue-700 border-fal-blue-500/30;
+}
+
+/* FAL Cards */
+.fal-card {
+  @apply bg-white border border-fal-gray-200 rounded-lg shadow-sm;
+}
+
+.fal-card-header {
+  @apply px-6 py-4 border-b border-fal-gray-200;
+}
+
+.fal-card-content {
+  @apply px-6 py-4;
+}
+
+/* FAL Metrics */
+.metric-value {
+  @apply text-2xl font-bold font-mono;
+}
+
+.metric-label {
+  @apply text-sm text-fal-gray-600 uppercase tracking-wide;
+}
+
+/* FAL Animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* FAL Progress Bars */
+.progress-bar {
+  @apply w-full bg-fal-gray-300 rounded-full h-2 overflow-hidden;
+}
+
+.progress-fill {
+  @apply h-full transition-all duration-1000 ease-out rounded-full;
+}
+
+/* FAL Code/Terminal styling */
+.terminal {
+  @apply bg-fal-gray-900 border border-fal-gray-300 rounded-lg p-4 font-mono text-sm text-fal-gray-100;
+}
+
+/* FAL Button variants */
+.btn-primary {
+  @apply bg-fal-primary-500 hover:bg-fal-primary-600 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-white hover:bg-fal-gray-50 text-fal-gray-700 border border-fal-gray-300 font-medium px-4 py-2 rounded-lg transition-colors;
+}
+
+/* FAL Connection status */
+.connection-indicator {
+  @apply flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.connection-connected {
+  @apply bg-fal-green-500/10 text-fal-green-700 border border-fal-green-500/30;
+}
+
+.connection-disconnected {
+  @apply bg-fal-red-500/10 text-fal-red-700 border border-fal-red-500/30;
+}
+
+.connection-connecting {
+  @apply bg-fal-yellow-500/10 text-fal-yellow-700 border border-fal-yellow-500/30;
+}
