@@ -9,8 +9,7 @@ class ComponentMonitor:
     Generic monitor for any components implementing Monitorable interface.
     
     Automatically collects metrics from all registered components with
-    namespaced keys to prevent conflicts. Perfect for FAL demos showing
-    clean, extensible architecture.
+    namespaced keys to prevent conflicts.
     """
     
     def __init__(self, components: Dict[str, Monitorable], history_duration=300):

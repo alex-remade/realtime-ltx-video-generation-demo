@@ -133,7 +133,7 @@ class LTXVideoResponseWithFrames(BaseModel):
     frames: Optional[List] = Field(default=None, description="PIL frames (when streaming)")
 
 
-# Simple monitoring interface for docs example
+# Simple monitoring interface
 class Monitorable(ABC):
     """Simple interface for components that can be monitored"""
     

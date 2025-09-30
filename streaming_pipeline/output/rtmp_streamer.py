@@ -145,7 +145,7 @@ class FFmpegRTMPStreamer(Monitorable):
     
 
     def add_frame(self, pil_frame):
-        """Add PIL Image frame to stream queue - simplified for docs"""
+        """Add PIL Image frame to stream queue"""
         if not self.is_streaming:
             return
         
@@ -171,7 +171,7 @@ class FFmpegRTMPStreamer(Monitorable):
             print(f"❌ Error processing frame: {e}")
 
     def add_frame_batch(self, pil_frames):
-        """Add multiple frames - simplified version that reuses existing logic"""
+        """Add multiple frames efficiently using batch processing"""
         if not self.is_streaming:
             queue_log.warning(f"❌ RTMP not streaming - rejecting {len(pil_frames) if pil_frames else 0} frames")
             return 0
@@ -318,7 +318,7 @@ class FFmpegRTMPStreamer(Monitorable):
 
 
     def get_status(self) -> dict:
-        """Get streaming status - simplified for docs example"""
+        """Get current streaming status and performance metrics"""
         return {
             "is_streaming": self.is_streaming,
             "frames_sent": self.frames_sent,

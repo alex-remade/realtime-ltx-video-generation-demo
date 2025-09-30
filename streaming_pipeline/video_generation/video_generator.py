@@ -91,7 +91,7 @@ class RealtimeGenerator(Monitorable):
         else:
             print("No model to optimize")
         
-        print("✅ Pipeline setup complete! (Upscaler skipped for image-to-video streaming)")
+        print("✅ Pipeline setup complete!")
     
 
     def decode_base64_image(self, base64_string: str) -> Image.Image:

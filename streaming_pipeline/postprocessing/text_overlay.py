@@ -9,7 +9,6 @@ class TextOverlay(Monitorable):
     Handles text overlay rendering for video frames.
     
     Separated from streaming logic for better separation of concerns.
-    For docs example - shows how to extract specialized functionality.
     """
     
     def __init__(self, width: int, height: int):
