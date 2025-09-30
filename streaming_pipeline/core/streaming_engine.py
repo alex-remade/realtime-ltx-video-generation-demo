@@ -14,20 +14,17 @@ from streaming_pipeline.models import LTXVideoRequestI2V, StreamingState, Monito
 
 class RealtimeVideoStreamer(Monitorable):
 
-    
-
-    
     def __init__(self, 
-                 twitch_listener,       # Injected TwitchChatListener instance
-                 prompt_generator,      # Injected PromptGenerator instance  
-                 realtime_generator,    # Injected RealtimeGenerator instance
-                 rtmp_streamer,         # Injected RTMP streamer instance
-                 text_overlay,          # Injected TextOverlay instance
+                 twitch_listener,       
+                 prompt_generator,     
+                 realtime_generator,  
+                 rtmp_streamer,        
+                 text_overlay,          
                  comments_lookback: int = 5,
                  initial_prompt: str = None,
                  initial_image_url: str = None):
         
-        # All dependencies are injected - pure dependency injection
+       
         self.twitch_listener = twitch_listener
         self.prompt_generator = prompt_generator
         self.realtime_generator = realtime_generator
@@ -35,9 +32,9 @@ class RealtimeVideoStreamer(Monitorable):
         self.text_overlay = text_overlay
         self.comments_lookback = comments_lookback
         
-        # Unified streaming state
+
         self.state = StreamingState()
-        # Remove callbacks entirely!
+  
         
         # Use provided values or defaults
         self.initial_prompt = initial_prompt
@@ -45,7 +42,7 @@ class RealtimeVideoStreamer(Monitorable):
         self.next_prompt_ready = None  # Pre-generated prompt
         self.prompt_generation_task = None
         
-        # Track generation parameters history (last 10 generations)
+        # Track generation parameters history (for metrics)
         self.generation_params_history = []
         
         # Current LTX configuration (starts with defaults, updated from start request)
@@ -64,7 +61,7 @@ class RealtimeVideoStreamer(Monitorable):
         current_dict = self.ltx_config.dict()
         current_dict.update(kwargs)
         self.ltx_config = LTXVideoRequestI2V(**current_dict)
-        print(f"🎛️ Updated LTX config: {', '.join(f'{k}={v}' for k, v in kwargs.items())}")
+        print(f"Updated LTX config: {', '.join(f'{k}={v}' for k, v in kwargs.items())}")
     
     def start_rtmp_stream(self):
         """Start the injected RTMP stream"""
