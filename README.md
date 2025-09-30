@@ -78,7 +78,16 @@ TWITCH_STREAM_KEY=your_twitch_stream_key_here
 FAL_KEY=your_fal_api_key_here
 ```
 
-### 3. Dashboard Setup
+### 3. Deploy to FAL
+
+```bash
+# Deploy the streaming pipeline
+fal deploy realtime-streaming
+```
+
+This will output various endpoints. Use the **Synchronous Endpoints** base URL for the dashboard.
+
+### 4. Dashboard Setup
 
 ```bash
 cd dashboard
@@ -86,30 +95,19 @@ cd dashboard
 # Install dependencies
 npm install
 
-# Create dashboard .env.local with your FAL app URL
-# Note: This URL is dynamic and changes with each deployment
-echo "NEXT_PUBLIC_FAL_API_URL=your_fal_app_url_here" > .env.local
+# Create dashboard .env.local with the synchronous endpoint base URL
+# Example: https://fal.run/alex-w67ic4anktp1/realtime-streaming
+echo "NEXT_PUBLIC_FAL_API_URL=https://fal.run/your-username/realtime-streaming" > .env.local
 
 # Start development server
 npm run dev
-```
-
-
-### 4. Deploy to FAL
-
-```bash
-# Deploy the streaming pipeline
-fal deploy streaming_pipeline/app.py
-
-# Run the application
-fal run realtime-streaming
 ```
 
 ## Usage Guide
 
 ### Starting a Stream
 
-1. **Deploy to FAL**: `fal deploy streaming_pipeline/app.py`
+1. **Deploy to FAL**: `fal deploy realtime-streaming`
 2. **Start Dashboard**: `cd dashboard && npm run dev`
 3. **Configure Stream**: Use the dashboard to set generation parameters
 4. **Start Streaming**: Click "Start Stream" in the dashboard
@@ -234,9 +232,19 @@ ws.onmessage = (event) => {
 # Install in development mode
 pip install -e .
 
-# Run the streaming pipeline locally
+# Run the streaming pipeline for development
 fal run realtime-streaming
 ```
+
+This will output various endpoints. For development, copy the **Synchronous Endpoints** base URL and update your dashboard's `.env.local`:
+
+```bash
+# Update dashboard with the development URL (copy the unique ID from terminal output)
+cd dashboard
+echo "NEXT_PUBLIC_FAL_API_URL=https://fal.run/unique-id-from-terminal/realtime-streaming" > .env.local
+```
+
+**Note**: The URL from `fal run` is temporary and will change each time you run the command. For persistent deployment, use `fal deploy realtime-streaming` instead.
 
 ### Adding New Features
 
