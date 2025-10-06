@@ -1,5 +1,4 @@
 import fal
-from fal.container import ContainerImage
 from fastapi import WebSocket
 
 from streaming_pipeline.streaming_service import StreamingService
@@ -8,36 +7,38 @@ from dotenv import load_dotenv
 
 #load_dotenv()
 
-# Define custom container with FFmpeg
-dockerfile_str = """
-
-FROM python:3.11
-
-# Install FFmpeg
-RUN apt-get update && apt-get install -y ffmpeg
-
-# Install Python dependencies (quote the version strings)
-RUN pip install "torch>=2.1.0" "diffusers>=0.28.2" "transformers>=4.47.2,<4.52.0"
-RUN pip install "sentencepiece>=0.1.96" "huggingface-hub~=0.30" einops timm
-RUN pip install "accelerate==1.4.0" "opencv-python>=4.9.0.80"
-RUN pip install "imageio[ffmpeg]>=2.25.0" "numpy>=1.21.0"
-RUN pip install ffmpeg-python python-dotenv openai
-RUN pip install fastapi uvicorn pydantic
-RUN pip install av torchvision  # Add missing av dependency and torchvision
-"""
-
-custom_image = ContainerImage.from_dockerfile_str(dockerfile_str)
+# Python requirements (FFmpeg is pre-installed in fal base images)
+requirements = [
+    "torch>=2.1.0",
+    "diffusers>=0.28.2",
+    "transformers>=4.47.2,<4.52.0",
+    "sentencepiece>=0.1.96",
+    "huggingface-hub~=0.30",
+    "einops",
+    "timm",
+    "accelerate==1.4.0",
+    "opencv-python>=4.9.0.80",
+    "imageio[ffmpeg]>=2.25.0",
+    "numpy>=1.21.0",
+    "ffmpeg-python",
+    "python-dotenv",
+    "openai",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "av",
+    "torchvision",
+]
 
 class RealtimeStreamingApp(
     fal.App,
-    kind="container",
-    image=custom_image,
     min_concurrency=0,
     max_concurrency=1,
     max_multiplexing=2,
     keep_alive=1000
 ):
     machine_type = "GPU-H100"
+    requirements=requirements
     
 
     
