@@ -8,9 +8,9 @@ from streaming_pipeline.core.streaming_engine import RealtimeVideoStreamer
 from streaming_pipeline.input.twitch_listener import TwitchChatListener
 from streaming_pipeline.prompt_generation.prompt_generator import PromptGenerator
 from streaming_pipeline.postprocessing.text_overlay import TextOverlay
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 class StreamingService:
     """Shared streaming service with core logic (no FAL decorators)"""

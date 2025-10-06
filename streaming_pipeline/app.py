@@ -6,7 +6,7 @@ from streaming_pipeline.streaming_service import StreamingService
 from streaming_pipeline.models import StartStreamRequest
 from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 # Define custom container with FFmpeg
 dockerfile_str = """
