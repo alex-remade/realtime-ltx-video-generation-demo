@@ -32,9 +32,9 @@ class RealtimeStreamingApp(
     fal.App,
     kind="container",
     image=custom_image,
-    name='realtime_streaming_app',
-    min_concurrency=1,
+    min_concurrency=0,
     max_concurrency=1,
+    max_multiplexing=2,
     keep_alive=1000
 ):
     machine_type = "GPU-H100"
