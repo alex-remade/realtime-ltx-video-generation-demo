@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { ComponentMetrics, RealtimeData } from '../types'
+import { getMetrics } from '../utils/falApi'
 
 export function useRealtimeData(apiUrl: string = process.env.NEXT_PUBLIC_FAL_API_URL || 'http://localhost:8000') {
   const [data, setData] = useState<RealtimeData>({
@@ -13,13 +14,7 @@ export function useRealtimeData(apiUrl: string = process.env.NEXT_PUBLIC_FAL_API
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const response = await fetch(`${apiUrl}/metrics`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({})
-      })
+      const response = await getMetrics(apiUrl)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }

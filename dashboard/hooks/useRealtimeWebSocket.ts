@@ -3,6 +3,31 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type { ComponentMetrics, RealtimeData, WebSocketMessage } from '../types'
 
+const TOKEN_EXPIRATION_MS = 300; // 5 minutes
+
+// Fetch temporary JWT token from fal.ai through our proxy
+const fetchTemporaryToken = async (appName: string): Promise<string> => {
+  const response = await fetch('/api/fal/proxy', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Fal-Target-Url': 'https://rest.alpha.fal.ai/tokens/',
+    },
+    body: JSON.stringify({
+      allowed_apps: [appName],
+      token_expiration: TOKEN_EXPIRATION_MS,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch token');
+  }
+
+  const token: string = await response.json();
+  return token;
+};
+
 export function useRealtimeWebSocket(apiUrl: string = process.env.NEXT_PUBLIC_FAL_API_URL || 'http://localhost:8000') {
   const [data, setData] = useState<RealtimeData>({
     metrics: null,
@@ -11,8 +36,10 @@ export function useRealtimeWebSocket(apiUrl: string = process.env.NEXT_PUBLIC_FA
     error: null
   })
   
+  const [token, setToken] = useState<string | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const tokenRefreshTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
 
@@ -21,10 +48,19 @@ export function useRealtimeWebSocket(apiUrl: string = process.env.NEXT_PUBLIC_FA
       return
     }
 
+    if (!token) {
+      console.log('📡 No token available yet, waiting...')
+      return
+    }
+
     try {
       // Convert HTTP URL to WebSocket URL
-      const wsUrl = apiUrl.replace(/^http:\/\//, 'ws://').replace(/^https:\/\//, 'wss://') + '/metrics/ws'
-      console.log('📡 Connecting to WebSocket:', wsUrl)
+      let wsUrl = apiUrl.replace(/^http:\/\//, 'ws://').replace(/^https:\/\//, 'wss://') + '/metrics/ws'
+      
+      // Add fal_jwt_token as query parameter
+      wsUrl += `?fal_jwt_token=${encodeURIComponent(token)}`
+      
+      console.log('📡 Connecting to WebSocket with JWT token')
       
       wsRef.current = new WebSocket(wsUrl)
       
@@ -108,12 +144,17 @@ export function useRealtimeWebSocket(apiUrl: string = process.env.NEXT_PUBLIC_FA
         error: error instanceof Error ? error.message : 'Connection failed'
       }))
     }
-  }, [apiUrl])
+  }, [apiUrl, token])
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current)
       reconnectTimeoutRef.current = null
+    }
+    
+    if (tokenRefreshTimeoutRef.current) {
+      clearTimeout(tokenRefreshTimeoutRef.current)
+      tokenRefreshTimeoutRef.current = null
     }
     
     if (wsRef.current) {
@@ -127,13 +168,57 @@ export function useRealtimeWebSocket(apiUrl: string = process.env.NEXT_PUBLIC_FA
     }))
   }, [])
 
+  // Fetch and refresh token
   useEffect(() => {
-    connect()
+    if (token) {
+      return // Token already exists
+    }
+
+    // Extract app name from the API URL
+    // Example: https://fal.run/alex-w67ic4anktp1/realtime-streaming -> realtime-streaming
+    const appName = apiUrl.includes('fal.run') 
+      ? apiUrl.split('/').pop() || 'realtime-streaming'
+      : 'realtime-streaming'
+
+    console.log('📡 Fetching temporary token for app:', appName)
+    
+    fetchTemporaryToken(appName)
+      .then((newToken) => {
+        console.log('📡 Token fetched successfully')
+        setToken(newToken)
+        
+        // Schedule token refresh before it expires (90% of expiration time)
+        tokenRefreshTimeoutRef.current = setTimeout(() => {
+          console.log('📡 Token expiring, refreshing...')
+          setToken(null) // Clear token to trigger refetch
+        }, TOKEN_EXPIRATION_MS * 1000 * 0.9)
+      })
+      .catch((error) => {
+        console.error('📡 Failed to fetch token:', error)
+        setData(prev => ({
+          ...prev,
+          error: `Authentication failed: ${error.message}`
+        }))
+      })
+
+    return () => {
+      if (tokenRefreshTimeoutRef.current) {
+        clearTimeout(tokenRefreshTimeoutRef.current)
+        tokenRefreshTimeoutRef.current = null
+      }
+    }
+  }, [token, apiUrl])
+
+  useEffect(() => {
+    // Only connect once we have a token
+    if (token) {
+      connect()
+    }
     
     return () => {
       disconnect()
     }
-  }, [connect, disconnect])
+  }, [connect, disconnect, token])
 
   return {
     ...data,

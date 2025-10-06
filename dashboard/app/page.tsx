@@ -8,6 +8,7 @@ import RealtimeChart from '../components/RealtimeChart'
 import TestControlPanel from '../components/TestControlPanel'
 import GenerationHistory from '../components/GenerationHistory'
 import { useRealtimeWebSocket } from '../hooks/useRealtimeWebSocket'
+import { startStream, stopStream } from '../utils/falApi'
 import { Wifi, WifiOff, AlertCircle, RefreshCw, Square } from 'lucide-react'
 
 export default function Dashboard() {
@@ -26,13 +27,7 @@ export default function Dashboard() {
       const apiUrl = process.env.NEXT_PUBLIC_FAL_API_URL || 'http://localhost:8000'
       console.log('🧪 API URL:', apiUrl)
       
-      const response = await fetch(`${apiUrl}/start_stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config)
-      })
+      const response = await startStream(apiUrl, config)
       
       console.log('🧪 Response received:', { 
         status: response.status, 
@@ -56,7 +51,7 @@ export default function Dashboard() {
         console.log('✅ Test started successfully:', result)
       }
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to start test:', error)
       setTestResults({ 
         status: 'error', 
@@ -72,13 +67,7 @@ export default function Dashboard() {
       const apiUrl = process.env.NEXT_PUBLIC_FAL_API_URL || 'http://localhost:8000'
       console.log('🛑 Attempting to stop stream...', { apiUrl })
       
-      const response = await fetch(`${apiUrl}/stop_stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({})
-      })
+      const response = await stopStream(apiUrl)
       
       console.log('🛑 Response received:', { 
         status: response.status, 
@@ -98,7 +87,7 @@ export default function Dashboard() {
       
       console.log('🛑 Test stopped successfully:', result)
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to stop test:', error)
       setTestResults({ 
         status: 'error', 

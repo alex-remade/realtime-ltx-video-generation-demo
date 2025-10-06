@@ -33,9 +33,9 @@ class RealtimeStreamingApp(
     kind="container",
     image=custom_image,
     name='realtime_streaming_app',
-    min_concurrency=0,
+    min_concurrency=1,
     max_concurrency=1,
-    keep_alive=300
+    keep_alive=1000
 ):
     machine_type = "GPU-H100"
     

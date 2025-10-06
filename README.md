@@ -95,13 +95,20 @@ cd dashboard
 # Install dependencies
 npm install
 
-# Create dashboard .env.local with the synchronous endpoint base URL
-# Example: https://fal.run/alex-w67ic4anktp1/realtime-streaming
-echo "NEXT_PUBLIC_FAL_API_URL=https://fal.run/your-username/realtime-streaming" > .env.local
+# Create dashboard .env.local with required configuration
+cat > .env.local << EOF
+# FAL API configuration
+NEXT_PUBLIC_FAL_API_URL=https://fal.run/your-username/realtime-streaming
+FAL_KEY=your_fal_api_key_here
+EOF
 
 # Start development server
 npm run dev
 ```
+
+**Important**: The dashboard needs two environment variables:
+- `NEXT_PUBLIC_FAL_API_URL`: Your deployed FAL app URL (synchronous endpoint)
+- `FAL_KEY`: Your FAL API key (server-side only, for authentication)
 
 ## Usage Guide
 
@@ -120,6 +127,32 @@ The FAL app exposes these endpoints:
 - `POST /stop_stream` - Stop the streaming pipeline
 - `GET /metrics` - Get current performance metrics
 - `WebSocket /metrics/ws` - Real-time metrics stream
+
+### Authentication
+
+All API requests to FAL endpoints require authentication. The dashboard handles this automatically:
+
+**How it works:**
+1. All HTTP requests route through `/api/fal/proxy` (Next.js API route)
+2. The proxy adds `Authorization: Key ${FAL_KEY}` header server-side
+3. WebSocket connections use temporary JWT tokens (auto-refreshed every 5 minutes)
+
+**Using the helper functions:**
+```typescript
+import { startStream, stopStream, getMetrics } from '@/utils/falApi';
+
+// Start streaming
+await startStream(apiUrl, config);
+
+// Stop streaming
+await stopStream(apiUrl);
+
+// Get metrics
+const response = await getMetrics(apiUrl);
+const metrics = await response.json();
+```
+
+All authentication is handled automatically - you never need to manually add the FAL_KEY header in client-side code.
 
 ### Request Format
 
