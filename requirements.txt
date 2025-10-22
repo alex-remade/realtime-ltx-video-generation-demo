@@ -26,3 +26,6 @@ openai>=1.0.0
 # Web framework
 fastapi>=0.100.0
 uvicorn>=0.23.0
+
+# Fal client for ltxv2-preview API
+fal_client>=0.5.0

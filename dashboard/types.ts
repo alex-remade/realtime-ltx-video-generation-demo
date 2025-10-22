@@ -1,5 +1,8 @@
 // Shared types for the FAL Realtime Dashboard
 
+// Model types
+export type ModelType = 'ltxv1' | 'ltxv2-preview'
+
 // Component-specific metrics types
 export interface RTMPMetrics {
   queue_size: number
@@ -91,3 +94,36 @@ export interface WebSocketMessage {
 export interface GenerationHistoryProps {
   generationHistory?: GenerationParams[]
 }
+
+// LTXv2 Preview configuration types
+export interface LTXv2Config {
+  model: 'ltxv2-preview'
+  image_url: string
+  prompt: string
+  duration?: 6 | 8
+  resolution?: '720p' | '1080p' | '1440p'
+  aspect_ratio?: '9:16' | '16:9'
+  enable_prompt_expansion?: boolean
+  // Streaming parameters (applied after generation)
+  target_fps?: number
+  width?: number
+  height?: number
+}
+
+// LTXv1 configuration types (existing streaming model)
+export interface LTXv1Config {
+  model: 'ltxv1'
+  initial_prompt: string
+  initial_image_url: string
+  negative_prompt: string
+  height: number
+  width: number
+  num_frames: number
+  strength: number
+  guidance_scale: number
+  timesteps: number[]
+  target_fps: number
+  mode: 'regular' | 'nightmare'
+}
+
+export type TestConfig = LTXv1Config | LTXv2Config

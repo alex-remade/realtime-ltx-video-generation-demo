@@ -23,6 +23,7 @@ export default function Dashboard() {
     try {
       setIsStreaming(true)
       console.log('🧪 Starting test with config:', config)
+      console.log('🧪 Model:', config.model)
       
       const apiUrl = process.env.NEXT_PUBLIC_FAL_API_URL || 'http://localhost:8000'
       console.log('🧪 API URL:', apiUrl)

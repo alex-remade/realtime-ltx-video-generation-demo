@@ -4,6 +4,7 @@ A real-time AI video generation system that creates dynamic content by listening
 
 ## Features
 
+- **Multiple Model Support**: Choose between LTX v1 (local HuggingFace) or LTX v2 Preview (fal.ai API)
 - **Real-time AI Video Generation**: Uses LTX Video model for high-quality video synthesis
 - **Twitch Chat Integration**: Listens to chat messages and generates contextual video content
 - **Live RTMP Streaming**: Streams generated videos directly to Twitch or other RTMP endpoints
@@ -156,8 +157,10 @@ All authentication is handled automatically - you never need to manually add the
 
 ### Request Format
 
+**LTX v1 (Local Pipeline):**
 ```json
 {
+  "model": "ltxv1",
   "initial_prompt": "A peaceful digital landscape",
   "initial_image_url": "https://example.com/image.jpg",
   "num_frames": 240,
@@ -169,15 +172,43 @@ All authentication is handled automatically - you never need to manually add the
 }
 ```
 
+**LTX v2 Preview (fal.ai API):**
+```json
+{
+  "model": "ltxv2-preview",
+  "initial_prompt": "A cinematic video with smooth camera movement",
+  "initial_image_url": "https://example.com/image.jpg",
+  "duration": 6,
+  "resolution": "720p",
+  "aspect_ratio": "16:9",
+  "enable_prompt_expansion": true
+}
+```
+
 ## Configuration
+
+### Model Selection
+
+Choose between two video generation backends:
+
+- **`ltxv1`** (default): Local HuggingFace LTX pipeline with full customization
+- **`ltxv2-preview`**: fal.ai hosted LTX v2 Preview with faster inference
 
 ### Video Generation Parameters
 
+**LTX v1 (Local Pipeline):**
 - **`num_frames`**: Number of frames to generate (default: 240)
 - **`width/height`**: Video resolution (default: 640x480)
 - **`guidance_scale`**: How closely to follow prompts (default: 3.0)
 - **`strength`**: Image-to-video influence (default: 1.0)
 - **`target_fps`**: Streaming frame rate (default: 9.0)
+- **`timesteps`**: Custom timesteps for diffusion process
+
+**LTX v2 Preview (fal.ai API):**
+- **`duration`**: Video duration - 6 or 8 seconds
+- **`resolution`**: Output resolution - 720p, 1080p, or 1440p
+- **`aspect_ratio`**: Video aspect ratio - 16:9 or 9:16
+- **`enable_prompt_expansion`**: Auto-enhance prompts (default: true)
 
 ### Streaming Configuration
 

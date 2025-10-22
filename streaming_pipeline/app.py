@@ -28,6 +28,8 @@ requirements = [
     "pydantic",
     "av",
     "torchvision",
+    "fal_client>=0.5.0",  # For ltxv2-preview API calls
+    "requests>=2.28.0",   # For downloading generated videos
 ]
 
 class RealtimeStreamingApp(

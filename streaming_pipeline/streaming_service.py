@@ -89,6 +89,12 @@ class StreamingService:
             # Update LTX configuration cleanly using the base model
             ltx_updates = {}
             
+            # Model selection
+            if request.model:
+                ltx_updates['model_type'] = request.model
+                print(f"   🎯 Model: {request.model}")
+            
+            # Common parameters
             if request.num_frames:
                 ltx_updates['num_frames'] = request.num_frames
             if request.timesteps:
@@ -103,6 +109,19 @@ class StreamingService:
                 ltx_updates['width'] = request.width
             if request.height:
                 ltx_updates['height'] = request.height
+            
+            # LTXv2-specific parameters
+            if request.duration is not None:
+                ltx_updates['duration'] = request.duration
+                print(f"   ⏱️ Duration: {request.duration}s")
+            if request.resolution:
+                ltx_updates['resolution'] = request.resolution
+                print(f"   📐 Resolution: {request.resolution}")
+            if request.aspect_ratio:
+                ltx_updates['aspect_ratio'] = request.aspect_ratio
+                print(f"   📏 Aspect Ratio: {request.aspect_ratio}")
+            if request.enable_prompt_expansion is not None:
+                ltx_updates['enable_prompt_expansion'] = request.enable_prompt_expansion
             
             # Apply all updates at once
             if ltx_updates:
