@@ -39,7 +39,7 @@ class RealtimeStreamingApp(
     max_multiplexing=2,
     keep_alive=1000
 ):
-    machine_type = "GPU-H100"
+    machine_type = "GPU-B200"
     requirements=requirements
     
 

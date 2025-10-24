@@ -59,50 +59,45 @@ class RealtimeGenerator(Monitorable):
 
 
     def setup(self):
-        print("✅ Video generator setup complete (HuggingFace pipeline disabled - using fal API)")
-        
-        # COMMENTED OUT: HuggingFace local pipeline setup
-        # Uncomment this if you want to use LTX v1 with local pipeline
-        
-        # import os
-        # import torch
+        import os
+        import torch
 
-        # os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
+        os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "1"
         
-        # # Enable memory optimizations
-        # torch.backends.cuda.matmul.allow_tf32 = True  # Faster matmul
-        # torch.backends.cudnn.allow_tf32 = True       # Faster convolutions
+        # Enable memory optimizations
+        torch.backends.cuda.matmul.allow_tf32 = True  # Faster matmul
+        torch.backends.cudnn.allow_tf32 = True       # Faster convolutions
         
-        # print("🚀 Loading main pipeline (image-to-video only)...")
-        # checkpoint_dir = safe_snapshot_download(
-        #     repo_id=MODEL_ID,
-        #     revision=REVISION,
-        #     local_dir=WEIGHTS_DIR,
-        #     local_dir_use_symlinks=True,
-        # )
-        # self.pipeline = LTXConditionPipeline.from_pretrained(
-        #     checkpoint_dir, 
-        #     torch_dtype=torch.bfloat16,
-        #     use_safetensors=True,
-        # )
-        # self.pipeline.to("cuda")
+        print("🚀 Loading main pipeline (image-to-video only)...")
+        checkpoint_dir = safe_snapshot_download(
+            repo_id=MODEL_ID,
+            revision=REVISION,
+            local_dir=WEIGHTS_DIR,
+            local_dir_use_symlinks=True,
+        )
+        self.pipeline = LTXConditionPipeline.from_pretrained(
+            checkpoint_dir, 
+            torch_dtype=torch.bfloat16,
+            use_safetensors=True,
+        )
+        self.pipeline.to("cuda")
         
 
-        # # Enable optimizations
-        # self.pipeline.vae.enable_tiling()
+        # Enable optimizations
+        self.pipeline.vae.enable_tiling()
 
-        # if hasattr(self.pipeline, "transformer"):
-        #     self.pipeline.transformer = optimize(self.pipeline.transformer)
-        # elif hasattr(self.pipeline, "denoiser"):
-        #     self.pipeline.denoiser = optimize(self.pipeline.denoiser)
-        # elif hasattr(self.pipeline, "unet"):
-        #     self.pipeline.unet = optimize(self.pipeline.unet)
-        # elif hasattr(self.pipeline, "vae"):
-        #     self.pipeline.vae = optimize(self.pipeline.vae)
-        # else:
-        #     print("No model to optimize")
+        if hasattr(self.pipeline, "transformer"):
+            self.pipeline.transformer = optimize(self.pipeline.transformer)
+        elif hasattr(self.pipeline, "denoiser"):
+            self.pipeline.denoiser = optimize(self.pipeline.denoiser)
+        elif hasattr(self.pipeline, "unet"):
+            self.pipeline.unet = optimize(self.pipeline.unet)
+        elif hasattr(self.pipeline, "vae"):
+            self.pipeline.vae = optimize(self.pipeline.vae)
+        else:
+            print("No model to optimize")
         
-        # print("✅ Pipeline setup complete!")
+        print("✅ Pipeline setup complete!")
     
 
     def decode_base64_image(self, base64_string: str) -> Image.Image:
