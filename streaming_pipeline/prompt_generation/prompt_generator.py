@@ -13,13 +13,24 @@ class PromptResult:
     selected_comment: Optional[TwitchComment]  # None for evolution
     prompt: str
     reasoning: str
+    character: Optional[str] = None  # Character key for TTS voice
+    dialogue: Optional[str] = None  # Dialogue to be narrated
 
 VISUAL_MODE = True
+NARRATION_MODE = True  # Enable character narration
 
 # Get the directory of this file and construct path to prompts
 current_dir = Path(__file__).parent.parent  # Go up to streaming_pipeline/
 prompts_dir = current_dir / "prompts"
-prompt_filename = "system_prompt_visual.txt" if VISUAL_MODE else "system_prompt.txt"
+
+# Choose prompt file based on modes
+if NARRATION_MODE:
+    prompt_filename = "system_prompt_visual_narrated.txt"
+elif VISUAL_MODE:
+    prompt_filename = "system_prompt_visual.txt"
+else:
+    prompt_filename = "system_prompt.txt"
+
 system_prompt = (prompts_dir / prompt_filename).read_text()
 
 
@@ -34,6 +45,7 @@ class PromptGenerator(Monitorable):
         self.openai_client = openai.OpenAI(api_key=openai_api_key)
         self.system_prompt = system_prompt
         self.VISUAL_MODE = VISUAL_MODE
+        self.NARRATION_MODE = NARRATION_MODE
         # Groq client (optional)
         if groq_api_key and self.USE_GROQ:
             self.groq_client = openai.OpenAI(
@@ -158,6 +170,11 @@ class PromptGenerator(Monitorable):
                 if self.VISUAL_MODE and result.get('visual_description'):
                     print(f"👁️ AI VISUAL DESCRIPTION: {result['visual_description']}")
                 
+                # Log character narration if enabled
+                if self.NARRATION_MODE and result.get('character') and result.get('dialogue'):
+                    print(f"🎤 CHARACTER: {result['character']}")
+                    print(f"💬 DIALOGUE: {result['dialogue']}")
+                
                 # Track output size
                 self.last_output_length = len(result.get('prompt', '') + result.get('reasoning', ''))
                 
@@ -169,7 +186,9 @@ class PromptGenerator(Monitorable):
                 return PromptResult(
                     selected_comment=selected_comment,
                     prompt=result['prompt'],
-                    reasoning=result['reasoning']
+                    reasoning=result['reasoning'],
+                    character=result.get('character') if self.NARRATION_MODE else None,
+                    dialogue=result.get('dialogue') if self.NARRATION_MODE else None
                 )
                 
             except (json.JSONDecodeError, KeyError, AttributeError) as e:
@@ -179,13 +198,17 @@ class PromptGenerator(Monitorable):
                     return PromptResult(
                         selected_comment=comments[0] if comments else None,
                         prompt=f"{context.current_scene}, {comments[0].message[:50] if comments[0] and comments[0].message else 'evolving'}, cinematic",
-                        reasoning="AI parsing failed, used first comment"
+                        reasoning="AI parsing failed, used first comment",
+                        character="narrator" if self.NARRATION_MODE else None,
+                        dialogue="The adventure continues..." if self.NARRATION_MODE else None
                     )
                 else:
                     return PromptResult(
                         selected_comment=None,
                         prompt=f"{context.current_scene}, slowly evolving, cinematic",
-                        reasoning="AI parsing failed, simple evolution"
+                        reasoning="AI parsing failed, simple evolution",
+                        character="narrator" if self.NARRATION_MODE else None,
+                        dialogue="The story unfolds..." if self.NARRATION_MODE else None
                     )
                     
         except Exception as e:
@@ -194,7 +217,9 @@ class PromptGenerator(Monitorable):
             return PromptResult(
                 selected_comment=None,
                 prompt=f"{context.current_scene}, continuing naturally, cinematic",
-                reasoning=f"API error: {e}"
+                reasoning=f"API error: {e}",
+                character="narrator" if self.NARRATION_MODE else None,
+                dialogue="The journey continues..." if self.NARRATION_MODE else None
             )
     
     def _find_comment(self, comments: List[TwitchComment], selected_text: str) -> TwitchComment:

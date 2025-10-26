@@ -8,6 +8,7 @@ from streaming_pipeline.core.streaming_engine import RealtimeVideoStreamer
 from streaming_pipeline.input.twitch_listener import TwitchChatListener
 from streaming_pipeline.prompt_generation.prompt_generator import PromptGenerator
 from streaming_pipeline.postprocessing.text_overlay import TextOverlay
+from streaming_pipeline.audio.tts_generator import TTSGenerator
 #from dotenv import load_dotenv
 
 #load_dotenv()
@@ -37,11 +38,16 @@ class StreamingService:
         openai_key = os.getenv("OPENAI_API_KEY")
         groq_key = os.getenv("GROQ_API_KEY")
         stream_key = os.getenv("TWITCH_STREAM_KEY")
+        fal_key = os.getenv("FAL_KEY")
+        enable_narration = os.getenv("ENABLE_NARRATION", "true").lower() == "true"
         
         if not openai_key:
             raise ValueError("OPENAI_API_KEY environment variable required")
         if not stream_key:
             raise ValueError("TWITCH_STREAM_KEY environment variable required")
+        if enable_narration and not fal_key:
+            print("⚠️ WARNING: ENABLE_NARRATION is true but FAL_KEY not set. Narration will be disabled.")
+            enable_narration = False
         
         # Create all dependencies independently (Dependency Injection pattern)
         self.twitch_listener = TwitchChatListener(twitch_channel)
@@ -54,24 +60,44 @@ class StreamingService:
         )
         self.text_overlay = TextOverlay(width=640, height=480)
         
+        # Initialize TTS generator for character narration (optional)
+        self.tts_generator = None
+        if enable_narration and fal_key:
+            try:
+                self.tts_generator = TTSGenerator(
+                    fal_key=fal_key,
+                    default_character="spongebob"
+                )
+                print("🎤 TTS Generator enabled for character narration!")
+            except Exception as e:
+                print(f"⚠️ Failed to initialize TTS Generator: {e}")
+                self.tts_generator = None
+        
         # Inject all dependencies into video streamer
         self.video_streamer = RealtimeVideoStreamer(
             twitch_listener=self.twitch_listener,
             prompt_generator=self.prompt_generator,
             realtime_generator=self.video_generator,
             rtmp_streamer=self.rtmp_streamer,
-            text_overlay=self.text_overlay
+            text_overlay=self.text_overlay,
+            tts_generator=self.tts_generator  # Optional TTS for narration
         )
         
         # Create generic component monitor
-        self.monitor = ComponentMonitor({
+        monitor_components = {
             "rtmp": self.rtmp_streamer,
             "video": self.video_streamer,
             "prompt": self.prompt_generator,
             "generator": self.video_generator,
             "overlay": self.text_overlay,
             "twitch": self.twitch_listener
-        })
+        }
+        
+        # Add TTS to monitoring if enabled
+        if self.tts_generator:
+            monitor_components["tts"] = self.tts_generator
+        
+        self.monitor = ComponentMonitor(monitor_components)
         
         # Start monitoring all components
         self.monitor.start_monitoring()

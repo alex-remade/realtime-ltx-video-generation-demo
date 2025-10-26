@@ -19,6 +19,7 @@ pytest
 ffmpeg-python
 opencv-python>=4.9.0.80
 python-dotenv>=1.0.0
+pydub>=0.25.1
 
 # OpenAI for prompt generation
 openai>=1.0.0

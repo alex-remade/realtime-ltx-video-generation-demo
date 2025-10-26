@@ -7,6 +7,7 @@ import AIPerformanceBreakdown from '../components/AIPerformanceBreakdown'
 import RealtimeChart from '../components/RealtimeChart'
 import TestControlPanel from '../components/TestControlPanel'
 import GenerationHistory from '../components/GenerationHistory'
+import { NarrationPanel } from '../components/NarrationPanel'
 import { useRealtimeWebSocket } from '../hooks/useRealtimeWebSocket'
 import { startStream, stopStream } from '../utils/falApi'
 import { Wifi, WifiOff, AlertCircle, RefreshCw, Square } from 'lucide-react'
@@ -217,6 +218,15 @@ export default function Dashboard() {
         <GenerationHistory generationHistory={metrics?.video?.generation_params_history} />
       </div>
 
+      {/* Character Narration Panel - Full Width */}
+      {metrics?.video?.narration_history && metrics.video.narration_history.length > 0 && (
+        <div className="w-full">
+          <NarrationPanel 
+            narrationHistory={metrics.video.narration_history}
+            ttsStatus={metrics.tts}
+          />
+        </div>
+      )}
      
     </div>
   )

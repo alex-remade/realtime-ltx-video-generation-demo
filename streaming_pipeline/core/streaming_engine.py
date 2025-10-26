@@ -19,7 +19,8 @@ class RealtimeVideoStreamer(Monitorable):
                  prompt_generator,     
                  realtime_generator,  
                  rtmp_streamer,        
-                 text_overlay,          
+                 text_overlay,
+                 tts_generator=None,  # Optional TTS generator for narration          
                  comments_lookback: int = 5,
                  initial_prompt: str = None,
                  initial_image_url: str = None):
@@ -30,6 +31,7 @@ class RealtimeVideoStreamer(Monitorable):
         self.realtime_generator = realtime_generator
         self.rtmp_streamer = rtmp_streamer
         self.text_overlay = text_overlay
+        self.tts_generator = tts_generator  # TTS for character voices
         self.comments_lookback = comments_lookback
         
 
@@ -44,6 +46,9 @@ class RealtimeVideoStreamer(Monitorable):
         
         # Track generation parameters history (for metrics)
         self.generation_params_history = []
+        
+        # Track narration history (for monitoring)
+        self.narration_history = []
         
         # Current LTX configuration (starts with defaults, updated from start request)
         self.ltx_config = LTXVideoRequestI2V(
@@ -384,6 +389,11 @@ class RealtimeVideoStreamer(Monitorable):
                 generation_log.info(f"🌱 Evolution: {prompt_result.reasoning}")
             generation_log.info(f"📝 Prompt: {prompt_result.prompt}")
             
+            # Log narration if available
+            if prompt_result.character and prompt_result.dialogue:
+                generation_log.info(f"🎤 Character: {prompt_result.character}")
+                generation_log.info(f"💬 Dialogue: {prompt_result.dialogue}")
+            
             prompt_to_use = prompt_result.prompt
             selected_comment = prompt_result.selected_comment
             used_comment = selected_comment is not None  # Track if comment was used
@@ -398,6 +408,17 @@ class RealtimeVideoStreamer(Monitorable):
             else:
                 # Show the AI-generated prompt when no comment is selected
                 self.text_overlay.set_prompt(prompt_to_use)
+        
+        # Generate TTS audio if narration is available (parallel with video generation)
+        audio_generation_task = None
+        if self.tts_generator and prompt_result.character and prompt_result.dialogue:
+            generation_log.info(f"🎤 Starting TTS generation in parallel...")
+            audio_generation_task = asyncio.create_task(
+                self._generate_narration_audio(
+                    prompt_result.dialogue,
+                    prompt_result.character
+                )
+            )
         
         # Generate video (same for both initial and subsequent generations)
         try:
@@ -505,11 +526,54 @@ class RealtimeVideoStreamer(Monitorable):
             self.state.generation_count += 1
             self.state.previous_prompts.append(prompt_to_use)
             
+            # Wait for TTS audio if it was generating
+            audio_url = None
+            if audio_generation_task:
+                try:
+                    audio_url = await audio_generation_task
+                    generation_log.info(f"🎤 TTS audio ready: {audio_url}")
+                    
+                    # Send audio to RTMP streamer for playback
+                    if self.rtmp_streamer and audio_url:
+                        generation_log.info(f"🎵 Sending audio to RTMP streamer...")
+                        success = self.rtmp_streamer.add_audio(audio_url)
+                        if success:
+                            generation_log.info(f"🎵 Audio queued for streaming!")
+                        else:
+                            generation_log.warning(f"🎵 Failed to queue audio for streaming")
+                    
+                    # Store in narration history
+                    import time
+                    self.narration_history.append({
+                        "timestamp": time.time(),
+                        "generation_id": self.state.generation_count,
+                        "character": prompt_result.character,
+                        "dialogue": prompt_result.dialogue,
+                        "audio_url": audio_url
+                    })
+                    # Keep only last 10
+                    self.narration_history = self.narration_history[-10:]
+                    
+                except Exception as e:
+                    generation_log.error(f"🎤 TTS generation failed: {e}")
+            
             generation_log.info(f"✅ Generated video #{self.state.generation_count}")
             # No delay - immediately ready for next generation!
             
         except Exception as e:
             generation_log.error(f"❌ Video generation failed: {e}")
+            raise
+    
+    async def _generate_narration_audio(self, dialogue: str, character: str) -> str:
+        """Generate TTS audio for character dialogue"""
+        try:
+            audio_url = await self.tts_generator.generate_speech(
+                text=dialogue,
+                character_key=character
+            )
+            return audio_url
+        except Exception as e:
+            generation_log.error(f"Failed to generate narration: {e}")
             raise
     
     def get_status(self) -> Dict[str, Any]:
@@ -518,7 +582,8 @@ class RealtimeVideoStreamer(Monitorable):
             "is_running": self.state.is_running,
             "generation_count": self.state.generation_count,
             "current_prompt": self.state.current_prompt[:50] + "..." if len(self.state.current_prompt) > 50 else self.state.current_prompt,
-            "generation_params_history": self.generation_params_history
+            "generation_params_history": self.generation_params_history,
+            "narration_history": self.narration_history
         }
 
 

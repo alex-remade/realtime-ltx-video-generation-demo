@@ -30,6 +30,8 @@ requirements = [
     "torchvision",
     "fal_client>=0.5.0",  # For ltxv2-preview API calls
     "requests>=2.28.0",   # For downloading generated videos
+    "httpx>=0.27.0",      # For TTS API calls
+    "pydub>=0.25.1",      # For audio processing
 ]
 
 class RealtimeStreamingApp(

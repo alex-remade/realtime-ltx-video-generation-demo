@@ -49,6 +49,22 @@ export interface TwitchMetrics {
   queue_size: number
 }
 
+export interface TTSMetrics {
+  total_generations: number
+  avg_generation_time: number
+  last_generation_time: number
+  last_text_length: number
+  available_characters: number
+}
+
+export interface NarrationEntry {
+  timestamp: number
+  generation_id: number
+  character: string
+  dialogue: string
+  audio_url: string
+}
+
 // Main metrics interface with nested component metrics
 export interface ComponentMetrics {
   timestamp: number
@@ -56,11 +72,12 @@ export interface ComponentMetrics {
   
   // Component-specific metrics
   rtmp: RTMPMetrics
-  video: VideoMetrics
+  video: VideoMetrics & { narration_history?: NarrationEntry[] }
   prompt: PromptMetrics
   generator: GeneratorMetrics
   overlay: OverlayMetrics
   twitch: TwitchMetrics
+  tts?: TTSMetrics  // Optional, only if narration is enabled
 }
 
 
