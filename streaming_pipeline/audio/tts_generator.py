@@ -33,7 +33,15 @@ CHARACTER_VOICES = {
         exaggeration=0.35,
         temperature=0.8,
         cfg=0.6,
-        description="Energetic, optimistic, high-pitched character"
+        description="Energetic, optimistic, high-pitched fry cook"
+    ),
+    "squidward": CharacterVoice(
+        name="Squidward",
+        reference_audio_url="https://storage.googleapis.com/remade-v2/tests/All%20Squidward%20Voice%20Clips%20%20SpongeBob%20SquarePants_%20Battle%20for%20Bikini%20Bottom%20%20(Rodger%20Bumpass).mp3",
+        exaggeration=0.30,
+        temperature=0.7,
+        cfg=0.65,
+        description="Sarcastic, monotone, cynical clarinet player"
     ),
     "narrator": CharacterVoice(
         name="Narrator",

@@ -89,8 +89,22 @@ class PromptGenerator(Monitorable):
             print("🔄 Falling back to OpenAI GPT-4o-mini")
             return "gpt-4o-mini", self.openai_client
 
-    def generate_prompt(self, comments: List[TwitchComment], context: StreamingState) -> PromptResult:
-        """Generate prompt with Groq for both text and vision"""
+    def generate_prompt(
+        self, 
+        comments: List[TwitchComment], 
+        context: StreamingState,
+        narration_history: List[Dict[str, Any]] = None,
+        available_characters: Dict[str, str] = None
+    ) -> PromptResult:
+        """
+        Generate prompt with Groq for both text and vision
+        
+        Args:
+            comments: Recent Twitch comments
+            context: Current streaming state
+            narration_history: List of recent narrations with character and dialogue
+            available_characters: Dict of character keys to descriptions
+        """
         
         # Format comments for AI (or "None" if empty)
         if comments:
@@ -98,12 +112,34 @@ class PromptGenerator(Monitorable):
         else:
             comment_text = "None"
         
+        # Format narration history
+        if narration_history and len(narration_history) > 0:
+            # Show last 5 narrations to create conversation context
+            recent_narrations = narration_history[-5:]
+            narration_text = "\n".join([
+                f"- {n['character']}: \"{n['dialogue']}\""
+                for n in recent_narrations
+            ])
+        else:
+            narration_text = "None (This is the first narration)"
+        
+        # Format available characters
+        if available_characters:
+            characters_text = "\n".join([
+                f"- {key}: {desc}"
+                for key, desc in available_characters.items()
+            ])
+        else:
+            characters_text = "- spongebob: Energetic, optimistic fry cook\n- narrator: Professional storyteller"
+        
         # Create base system prompt
         formatted_prompt = self.system_prompt.format(
             previous_prompts=context.previous_prompts[-self.CONTEXT_WINDOW_SIZE:] if context.previous_prompts else ["None"],
             current_scene=context.current_scene,
             chat_comments=comment_text,
-            mode=context.mode
+            mode=context.mode,
+            narration_history=narration_text,
+            available_characters=characters_text
         )
         
         # Select model and client
@@ -183,11 +219,39 @@ class PromptGenerator(Monitorable):
                 if comments and result.get('selected_comment') != "null":
                     selected_comment = self._find_comment(comments, result['selected_comment'])
                 
+                # ENFORCE character variation - override if AI picks same character twice
+                chosen_character = result.get('character') if self.NARRATION_MODE else None
+                if chosen_character and narration_history and len(narration_history) > 0:
+                    last_character = narration_history[-1].get('character')
+                    if chosen_character == last_character:
+                        # AI picked same character! Force variation
+                        print(f"⚠️ AI picked same character '{chosen_character}' twice! Forcing variation...")
+                        
+                        # Get available characters and remove the last one
+                        if available_characters:
+                            available_keys = list(available_characters.keys())
+                            if last_character in available_keys:
+                                available_keys.remove(last_character)
+                            
+                            # Prefer spongebob<->squidward alternation
+                            if last_character == 'spongebob' and 'squidward' in available_keys:
+                                chosen_character = 'squidward'
+                                print(f"   → Switched to Squidward (contrasting SpongeBob)")
+                            elif last_character == 'squidward' and 'spongebob' in available_keys:
+                                chosen_character = 'spongebob'
+                                print(f"   → Switched to SpongeBob (contrasting Squidward)")
+                            elif available_keys:
+                                # Pick first available different character
+                                chosen_character = available_keys[0]
+                                print(f"   → Switched to {chosen_character}")
+                            else:
+                                print(f"   → No other characters available, keeping {chosen_character}")
+                
                 return PromptResult(
                     selected_comment=selected_comment,
                     prompt=result['prompt'],
                     reasoning=result['reasoning'],
-                    character=result.get('character') if self.NARRATION_MODE else None,
+                    character=chosen_character,
                     dialogue=result.get('dialogue') if self.NARRATION_MODE else None
                 )
                 

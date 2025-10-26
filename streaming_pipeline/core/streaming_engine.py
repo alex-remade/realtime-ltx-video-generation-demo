@@ -312,6 +312,11 @@ class RealtimeVideoStreamer(Monitorable):
         # Get recent comments
         comments = self.twitch_listener.get_recent_comments(self.comments_lookback)
         
+        # Get available characters from TTS generator if available
+        available_characters = {}
+        if self.tts_generator:
+            available_characters = self.tts_generator.get_available_characters()
+        
         # Log LLM input details
         print(f"\n🤖 LLM INPUT for next generation:")
         print(f"   📝 Previous prompts: {len(self.state.previous_prompts)}")
@@ -321,12 +326,19 @@ class RealtimeVideoStreamer(Monitorable):
         print(f"   💬 Recent comments: {len(comments)}")
         for i, comment in enumerate(comments):
             print(f"   💬 [{comment.username}]: {comment.message}")
+        print(f"   🎭 Available characters: {len(available_characters)}")
+        print(f"   🎤 Recent narrations: {len(self.narration_history)}")
+        if self.narration_history:
+            last_narration = self.narration_history[-1]
+            print(f"   🎤 Last: {last_narration['character']} said \"{last_narration['dialogue']}\"")
         
-        # Generate prompt with visual context (pass state directly)
+        # Generate prompt with visual context, narration history, and available characters
         prompt_result = await asyncio.to_thread(
             self.prompt_generator.generate_prompt, 
             comments, 
-            self.state  # Pass unified state instead of separate context
+            self.state,  # Pass unified state instead of separate context
+            self.narration_history,  # Pass narration history for context
+            available_characters  # Pass available character voices
         )
         
         # Log LLM output details
@@ -369,13 +381,25 @@ class RealtimeVideoStreamer(Monitorable):
                 # Fallback if no pre-generated prompt
                 comments = self.twitch_listener.get_recent_comments(self.comments_lookback)
                 
+                # Get available characters
+                available_characters = {}
+                if self.tts_generator:
+                    available_characters = self.tts_generator.get_available_characters()
+                
                 # Log fallback LLM input
                 print(f"\n🤖 FALLBACK LLM INPUT:")
                 print(f"   💬 Recent comments: {len(comments)}")
                 for comment in comments:
                     print(f"   💬 [{comment.username}]: {comment.message}")
+                print(f"   🎭 Available characters: {len(available_characters)}")
+                print(f"   🎤 Recent narrations: {len(self.narration_history)}")
                 
-                prompt_result = self.prompt_generator.generate_prompt(comments, self.state)
+                prompt_result = self.prompt_generator.generate_prompt(
+                    comments, 
+                    self.state,
+                    self.narration_history,
+                    available_characters
+                )
                 
                 # Log fallback LLM output
                 print(f"🤖 FALLBACK LLM OUTPUT:")

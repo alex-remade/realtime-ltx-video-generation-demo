@@ -30,27 +30,54 @@ PROGRESSION TACTICS:
 - Too peaceful? → Create URGENCY or DANGER
 
 CHARACTER NARRATION RULES:
-1. Pick ONE character to narrate the scene (who speaks about what's happening)
+1. Pick ONE character to narrate THIS scene (creates dynamic multi-character conversations)
 2. Create a SHORT dialogue line (1-2 sentences, under 150 characters)
 3. The dialogue should match the visual action and character personality
 4. Use ACTIVE, ENERGETIC language that enhances the scene
+5. **VARY CHARACTERS** - Don't use the same character twice in a row! Create conversation dynamics!
 
-Available Characters:
-- spongebob: Energetic, optimistic, excitable (use for upbeat/fun scenes)
-- narrator: Professional, dramatic storyteller (use for epic/serious moments)
-- mysterious: Deep, ominous voice (use for dark/suspenseful scenes)
+Available Characters: {available_characters}
+
+Recent Narration History (last few scenes):
+{narration_history}
+
+⚠️ **CRITICAL CHARACTER SELECTION RULES** ⚠️:
+1. **NEVER USE THE SAME CHARACTER TWICE IN A ROW!**
+2. Look at narration history - if last was SpongeBob → MUST pick Squidward/Narrator/Mysterious
+3. If last was Squidward → MUST pick SpongeBob/Narrator/Mysterious  
+4. Create BACK-AND-FORTH dialogue between SpongeBob and Squidward
+5. Use Narrator only for scene transitions (not conversations)
+6. Use Mysterious only for dark/dramatic moments
+
+CHARACTER PERSONALITY GUIDE:
+- **SpongeBob** (spongebob): Enthusiastic, naive, loves adventure - "I'm ready!" / "This is amazing!"
+- **Squidward** (squidward): Cynical, annoyed, sarcastic - "Ugh, not this again..." / "Why me?"
+- **Narrator** (narrator): Dramatic, objective observer - "And thus, the journey began..."
+- **Mysterious** (mysterious): Ominous, foreboding - "Darkness awaits..." / "The shadows hunger..."
+
+VARIATION EXAMPLES BY LAST CHARACTER:
+- Last was spongebob → Pick squidward to show contrast: "Ugh, your enthusiasm is exhausting..."
+- Last was squidward → Pick spongebob to counter: "Don't be such a grump, this is fun!"
+- Last was narrator → Pick spongebob or squidward for character interaction
+- Last was mysterious → Pick spongebob for comic relief or squidward for dry reaction
 
 TASK:
 If chat comments are provided:
 1. Pick the most TRANSFORMATIVE comment
 2. Use it to DRASTICALLY change the current scene
-3. Assign appropriate character voice for the moment
+3. **CHECK NARRATION HISTORY** - pick DIFFERENT character than last time!
 
 If no comments:
 1. Look at last 3 prompts - if similar, do something COMPLETELY DIFFERENT
 2. Introduce NEW: location, character, object, or event
 3. Create CONFLICT, DISCOVERY, or TRANSFORMATION
-4. Assign character voice that matches the scene's mood
+4. **CHECK NARRATION HISTORY** - MUST vary from last character!
+
+⚠️ BEFORE CHOOSING CHARACTER:
+1. Read narration_history to see who spoke last
+2. If last was "spongebob" → YOU MUST PICK squidward/narrator/mysterious
+3. If last was "squidward" → YOU MUST PICK spongebob/narrator/mysterious
+4. ALTERNATING characters creates better conversations!
 
 STYLE:
 - Action verbs (crashes, transforms, discovers, battles)
@@ -59,18 +86,31 @@ STYLE:
 - Dialogue under 150 characters
 - Focus on CHANGE not continuity
 
-EXAMPLES OF GOOD PROGRESSION WITH NARRATION:
-- Visual: "Astronaut crashes into alien spaceship"
+EXAMPLES OF GOOD MULTI-CHARACTER PROGRESSION:
+Scene 1:
+- Visual: "SpongeBob crashes into alien spaceship"
   Character: spongebob
-  Dialogue: "Whoa! That was one heck of a landing! Let's explore this weird ship!"
-  
-- Visual: "Robot transforms into futuristic vehicle"
+  Dialogue: "I'm ready! I'm ready! Let's explore this weird ship!"
+
+Scene 2 (SpongeBob just spoke, so pick DIFFERENT character):
+- Visual: "Squidward reluctantly follows through the ship"
+  Character: squidward
+  Dialogue: "Of course we crashed. Why did I expect anything else from you?"
+
+Scene 3 (Squidward just spoke, so pick DIFFERENT character):
+- Visual: "Robot transforms before their eyes"
   Character: narrator
-  Dialogue: "In an instant, the machine evolved beyond recognition, ready for adventure."
-  
-- Visual: "Explorer discovers glowing portal in ancient ruins"
-  Character: mysterious
-  Dialogue: "The gateway beckons... but what lies beyond may change everything."
+  Dialogue: "The machine evolved beyond recognition, sensing their presence."
+
+Scene 4 (Narrator just spoke, use character for interaction):
+- Visual: "SpongeBob approaches glowing portal"
+  Character: spongebob
+  Dialogue: "Ooh, shiny! What do you think it does, Squidward?"
+
+Scene 5 (SpongeBob asking, Squidward responds):
+- Visual: "Squidward examines portal cautiously"
+  Character: squidward
+  Dialogue: "It's probably dangerous. Which means you'll jump right in, won't you?"
 
 MODE INSTRUCTIONS:
 If mode is "nightmare": Make ALL prompts nightmarish/bizarre/outlandish. Transform normal actions into surreal/disturbing scenarios. Use mysterious character voice.
