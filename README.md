@@ -69,6 +69,9 @@ Create `.env` in the root directory:
 ```env
 # Required API Keys
 OPENAI_API_KEY=your_openai_api_key_here
+# Optional: any OpenAI-compatible endpoint
+# OPENAI_BASE_URL=https://api.a2agent.me/v1
+# OPENAI_MODEL=deepseek-v4-pro
 GROQ_API_KEY=your_groq_api_key_here  # Optional, for faster inference
 
 # Twitch Configuration
@@ -78,6 +81,17 @@ TWITCH_STREAM_KEY=your_twitch_stream_key_here
 # FAL Configuration
 FAL_KEY=your_fal_api_key_here
 ```
+
+### Using an alternative LLM provider
+
+Prompt generation is the only step that uses an LLM, and it only needs short text completions — so any OpenAI-compatible endpoint works. Set `OPENAI_BASE_URL` and `OPENAI_MODEL`:
+
+| Provider | OPENAI_BASE_URL | Notes |
+| --- | --- | --- |
+| OpenAI | (leave unset) | Default |
+| Groq | `https://api.groq.com/openai/v1` | Lowest latency |
+| a2agent | `https://api.a2agent.me/v1` | Open-weight models (DeepSeek / GLM / Kimi / Qwen), $5 free credit on signup |
+| Ollama | `http://localhost:11434/v1` | Fully local, no API cost |
 
 ### 3. Deploy to FAL
 
