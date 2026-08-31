@@ -209,8 +209,20 @@ class PromptGenerator(Monitorable):
         self.temperature = 0.7
         self.VISUAL_MODE = VISUAL_MODE
 
+        # None base_url → official OpenAI; set OPENAI_BASE_URL for any
+        # OpenAI-compatible endpoint (Groq, a2agent, Ollama, etc.).
+        self.openai_base_url = os.getenv("OPENAI_BASE_URL") or None
+        openai_model = os.getenv("OPENAI_MODEL")
+        self.openai_text_model = openai_model or "gpt-4o-mini"
+        self.openai_vision_model = openai_model or "gpt-4o"
+
         self.openai_client = (
-            openai.OpenAI(api_key=openai_api_key) if openai_api_key else None
+            openai.OpenAI(
+                api_key=openai_api_key,
+                base_url=self.openai_base_url,
+            )
+            if openai_api_key
+            else None
         )
 
         if groq_api_key and self.USE_GROQ:
@@ -270,11 +282,21 @@ class PromptGenerator(Monitorable):
         """Select optimal model and client based on requirements.
 
         Preference order:
-          1. fal → OpenRouter (unified billing via FAL_KEY)
-          2. Groq (fastest inference, when GROQ_API_KEY is set)
-          3. OpenAI direct
+          1. Explicit OpenAI-compatible endpoint (OPENAI_BASE_URL)
+          2. fal → OpenRouter (unified billing via FAL_KEY)
+          3. Groq (fastest inference, when GROQ_API_KEY is set)
+          4. OpenAI direct
         """
         needs_vision = self.VISUAL_MODE and context.current_frame_base64
+
+        # Explicit OpenAI-compatible endpoint (OPENAI_BASE_URL) wins so
+        # alternative providers are actually used even when FAL_KEY is set.
+        if self.openai_client and self.openai_base_url:
+            model = (
+                self.openai_vision_model if needs_vision else self.openai_text_model
+            )
+            print(f"🔗 Using OpenAI-compatible endpoint: {model}")
+            return model, self.openai_client
 
         if self.fal_openrouter_client:
             model = self.fal_vision_model if needs_vision else self.fal_text_model
@@ -291,10 +313,10 @@ class PromptGenerator(Monitorable):
 
         if self.openai_client:
             if needs_vision:
-                print("🔄 Falling back to OpenAI GPT-4o for vision")
-                return "gpt-4o", self.openai_client
-            print("🔄 Falling back to OpenAI GPT-4o-mini")
-            return "gpt-4o-mini", self.openai_client
+                print(f"🔄 Falling back to OpenAI {self.openai_vision_model} for vision")
+                return self.openai_vision_model, self.openai_client
+            print(f"🔄 Falling back to OpenAI {self.openai_text_model}")
+            return self.openai_text_model, self.openai_client
 
         raise RuntimeError("No LLM client available for prompt generation")
 
@@ -382,7 +404,7 @@ class PromptGenerator(Monitorable):
                 elif client == self.groq_client:
                     model = "llama-3.1-70b-versatile"
                 else:
-                    model = "gpt-4o-mini"
+                    model = self.openai_text_model
         
         # Track input size and start timing
         input_text = formatted_prompt + comment_text
@@ -415,7 +437,7 @@ class PromptGenerator(Monitorable):
                     elif client == self.groq_client:
                         text_only_model = "llama-3.1-8b-instant"
                     else:
-                        text_only_model = "gpt-4o-mini"
+                        text_only_model = self.openai_text_model
                     response = client.chat.completions.create(
                         model=text_only_model,
                         messages=text_only_messages,
